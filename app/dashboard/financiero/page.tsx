@@ -408,7 +408,36 @@ export default function FinancieroPage() {
                 <p className="chart-subtitle">Últimos 6 meses</p>
               </div>
             </div>
-            <div className="overflow-x-auto -mx-[22px] px-[22px] md:mx-0 md:px-0">
+            {/* Mobile: card stacking */}
+            <div className="md:hidden space-y-3 pt-1">
+              {(sortedMonths as unknown as MonthRow[]).map((row, i) => {
+                const margen = row.ingresos > 0 ? ((row.ebitda / row.ingresos) * 100).toFixed(1) : '0.0'
+                return (
+                  <div key={`m-${row.mes}-${i}`} className="rounded-[10px] border p-4" style={{ borderColor: '#D6E4F0' }}>
+                    <div className="flex justify-between items-center mb-3">
+                      <p className="text-sm font-medium text-ink">{row.mes}</p>
+                      <span className="pill high">{margen}%</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Ingresos</p>
+                        <p className="text-sm font-medium mt-0.5" style={{ color: '#0A1628' }}>{fmt(row.ingresos)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Costos</p>
+                        <p className="text-sm font-medium mt-0.5" style={{ color: '#4A6580' }}>{fmt(row.costos)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Margen bruto</p>
+                        <p className="text-sm font-medium mt-0.5" style={{ color: '#0A1628' }}>{fmt(row.ebitda)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            {/* Desktop: full table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full min-w-[560px]">
                 <thead>
                   <tr className="border-b border-synk-border">
