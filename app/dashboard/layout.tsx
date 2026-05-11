@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/dashboard/Sidebar'
+import { PageTracker } from '@/components/PageTracker'
 
 export default async function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-surface">
+      <PageTracker />
       <Sidebar userFullName={fullName} userEmail={user.email ?? ''} />
       <main className="flex-1 overflow-y-auto pl-12 md:pl-0">
         <div className="p-4 md:p-8 max-w-[1400px] mx-auto">{children}</div>

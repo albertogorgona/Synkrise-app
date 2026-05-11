@@ -28,7 +28,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
-  const isProtected = path.startsWith('/dashboard')
+  const isProtected = path.startsWith('/dashboard') || path.startsWith('/admin')
   const isAuth =
     path.startsWith('/login') ||
     path.startsWith('/register') ||
