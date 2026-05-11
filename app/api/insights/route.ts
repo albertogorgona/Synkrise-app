@@ -1,9 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 const client = new Anthropic()
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
+  }
+
   const { summary } = await req.json() as { summary?: string }
 
   if (!summary) {
