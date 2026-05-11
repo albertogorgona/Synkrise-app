@@ -369,7 +369,41 @@ export default function InventarioPage() {
             <p className="chart-subtitle">Estado actual por producto</p>
           </div>
         </div>
-        <div className="overflow-x-auto -mx-[22px] px-[22px] md:mx-0 md:px-0">
+        {/* Mobile: card stacking */}
+        <div className="md:hidden space-y-3 pt-1">
+          {(sortedItems as unknown as InventarioRow[]).map((item, i) => {
+            const alerta = (item.stock_actual ?? 0) < (item.stock_minimo ?? 0)
+            return (
+              <div key={`m-${item.producto}-${i}`} className="rounded-[10px] border p-4" style={{ borderColor: '#D6E4F0' }}>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 pr-2">
+                    <p className="text-sm font-medium text-ink leading-snug">{item.producto}</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#4A6580' }}>{item.categoria}</p>
+                  </div>
+                  <span className={`pill shrink-0 ${alerta ? 'low' : 'high'}`}>
+                    {alerta ? '↓ Bajo mínimo' : '✓ OK'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Stock Actual</p>
+                    <p className="text-sm font-medium mt-0.5" style={{ color: alerta ? '#E05C5C' : '#0A1628' }}>{fmtNum(item.stock_actual ?? 0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Mínimo</p>
+                    <p className="text-sm font-medium mt-0.5" style={{ color: '#4A6580' }}>{fmtNum(item.stock_minimo ?? 0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Rotación</p>
+                    <p className="text-sm font-medium mt-0.5" style={{ color: '#0A1628' }}>{(item.rotacion ?? 0).toFixed(1)}x</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        {/* Desktop: full table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[580px]">
             <thead>
               <tr className="border-b border-synk-border">

@@ -23,11 +23,13 @@ export async function register(formData: FormData) {
   const password = formData.get('password') as string
 
   const supabase = await createClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { full_name: fullName },
+      emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   })
 

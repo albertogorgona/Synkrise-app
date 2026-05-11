@@ -474,7 +474,35 @@ export default function VentasPage() {
                 <p className="chart-subtitle">Por facturación total</p>
               </div>
             </div>
-            <div className="overflow-x-auto -mx-[22px] px-[22px] md:mx-0 md:px-0">
+            {/* Mobile: card stacking */}
+            <div className="md:hidden space-y-3 pt-1">
+              {(sortedProducts as unknown as ProductRow[]).map((p, i) => (
+                <div key={`m-${p.producto}-${i}`} className="rounded-[10px] border p-4" style={{ borderColor: '#D6E4F0' }}>
+                  <div className="flex justify-between items-start mb-3">
+                    <p className="text-sm font-medium text-ink flex-1 pr-2 leading-snug">{p.producto}</p>
+                    <span className={`pill shrink-0 ${p.tendencia === 'up' ? 'high' : p.tendencia === 'down' ? 'low' : 'mid'}`}>
+                      {p.tendencia === 'up' ? '↑ Alta' : p.tendencia === 'down' ? '↓ Baja' : '→ Estable'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Unidades</p>
+                      <p className="text-sm font-medium mt-0.5" style={{ color: '#4A6580' }}>{p.unidades.toLocaleString('es-PA')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Ventas</p>
+                      <p className="text-sm font-medium mt-0.5" style={{ color: '#0A1628' }}>{fmt(p.ventas)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Margen</p>
+                      <p className="text-sm font-medium mt-0.5" style={{ color: '#0A1628' }}>{p.margen.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: full table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full min-w-[580px]">
                 <thead>
                   <tr className="border-b border-synk-border">

@@ -343,7 +343,45 @@ export default function ClientesPage() {
                 <p className="chart-subtitle">Por facturación total</p>
               </div>
             </div>
-            <div className="overflow-x-auto -mx-[22px] px-[22px] md:mx-0 md:px-0">
+            {/* Mobile: card stacking */}
+            <div className="md:hidden space-y-3 pt-1">
+              {(sortedClientes as unknown as ClienteRow[]).map((c, i) => {
+                const style = c.segmento ? getSegmentStyle(c.segmento, allSegments) : { bg: '#F0F4FA', color: '#4A6580' }
+                return (
+                  <div key={`m-${c.cliente_id}-${i}`} className="rounded-[10px] border p-4" style={{ borderColor: '#D6E4F0' }}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1 pr-2">
+                        <p className="text-sm font-medium text-ink">{c.cliente}</p>
+                        <p className="text-[10px] font-mono mt-0.5" style={{ color: '#4A6580' }}>{c.cliente_id}</p>
+                      </div>
+                      {c.segmento ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: style.bg, color: style.color }}>
+                          {c.segmento}
+                        </span>
+                      ) : (
+                        <span className="text-xs" style={{ color: '#4A6580' }}>—</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Compras</p>
+                        <p className="text-sm font-medium mt-0.5" style={{ color: '#4A6580' }}>{fmtNum(c.compras ?? 0)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Facturación</p>
+                        <p className="text-sm font-medium mt-0.5" style={{ color: '#0A1628' }}>{fmtCur(c.facturacion ?? 0)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: '#4A6580' }}>Última Compra</p>
+                        <p className="text-sm font-medium mt-0.5" style={{ color: '#4A6580' }}>{c.ultima_compra ?? '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            {/* Desktop: full table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full min-w-[580px]">
                 <thead>
                   <tr className="border-b border-synk-border">
