@@ -1,0 +1,303 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Synkrise design tokens → Tailwind v4 utilities ─── */
+@theme inline {
+  /* Base shadcn tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sora);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ── Synkrise brand colors ── */
+  --color-ink:          #0A1628;
+  --color-surface:      #F0F4FA;
+  --color-synk-white:   #FFFFFF;
+  --color-synk-accent:  #1A6FC4;
+  --color-accent-light: #E6F0FB;
+  --color-teal:         #0ABFBC;
+  --color-teal-light:   #E0F8F8;
+  --color-synk-red:     #E05C5C;
+  --color-red-light:    #FEF1F1;
+  --color-amber:        #F59E0B;
+  --color-synk-border:  #D6E4F0;
+  --color-slate:        #4A6580;
+  --color-synk-sidebar: #0F2D52;
+
+  /* ── Colores semánticos (KPI badges, tendencias, semáforos) ── */
+  --color-semantic-green:  #28A87A;
+  --color-semantic-yellow: #C97830;
+  --color-semantic-red:    #A83E48;
+
+  /* ── Synkrise fonts ── */
+  --font-sora:    var(--font-sora);
+  --font-dm-sans: var(--font-dm-sans);
+
+  /* ── Synkrise radii ── */
+  --radius-card:  14px;
+  --radius-nav:   9px;
+  --radius-badge: 8px;
+  --radius-pill:  12px;
+}
+
+/* ─── CSS custom properties runtime ─── */
+:root {
+  /* shadcn tokens mapped to Synkrise palette */
+  --background: #F0F4FA;
+  --foreground: #0A1628;
+  --card: #FFFFFF;
+  --card-foreground: #0A1628;
+  --popover: #FFFFFF;
+  --popover-foreground: #0A1628;
+  --primary: #1A6FC4;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E6F0FB;
+  --secondary-foreground: #0A1628;
+  --muted: #E6F0FB;
+  --muted-foreground: #4A6580;
+  --accent: #E6F0FB;
+  --accent-foreground: #0A1628;
+  --destructive: #E05C5C;
+  --border: #D6E4F0;
+  --input: #D6E4F0;
+  --ring: #1A6FC4;
+  --radius: 0.875rem;
+
+  /* Chart colors — paleta unificada azul/teal + semánticos */
+  --chart-1: #1A6FC4;
+  --chart-2: #0ABFBC;
+  --chart-3: #28A87A;
+  --chart-4: #C97830;
+  --chart-5: #A83E48;
+  --chart-6: #3A8FD8;
+  --chart-7: #A8CCE8;
+
+  /* Sidebar */
+  --sidebar: #0F2D52;
+  --sidebar-foreground: rgba(255,255,255,0.9);
+  --sidebar-primary: #1A6FC4;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(255,255,255,0.08);
+  --sidebar-accent-foreground: rgba(255,255,255,0.9);
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: #1A6FC4;
+
+  /* Synkrise brand tokens */
+  --ink:          #0A1628;
+  --surface:      #F0F4FA;
+  --synk-accent:  #1A6FC4;
+  --teal:         #0ABFBC;
+  --synk-red:     #E05C5C;
+  --synk-amber:   #F59E0B;
+  --synk-border:  #D6E4F0;
+  --slate:        #4A6580;
+  --synk-sidebar: #0F2D52;
+
+  /* Colores semánticos (KPI badges, tendencias, semáforos) */
+  --semantic-green:  #28A87A;
+  --semantic-yellow: #C97830;
+  --semantic-red:    #A83E48;
+}
+
+/* ─── Base styles ─── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
+  }
+  html {
+    @apply h-full;
+    font-family: var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-sora), 'Sora', system-ui, sans-serif;
+  }
+
+  /* Reduced motion — accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ─── Synkrise component utilities ─── */
+@layer components {
+  /* KPI Card */
+  .kpi-card {
+    background: #FFFFFF;
+    border: 1px solid #D6E4F0;
+    border-radius: 14px;
+    padding: 16px 18px;
+    border-top: 3px solid #1A6FC4;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .kpi-card.teal  { border-top-color: #0ABFBC; }
+  .kpi-card.red   { border-top-color: #E05C5C; }
+  .kpi-card.amber { border-top-color: #F59E0B; }
+
+  .kpi-label {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #4A6580;
+  }
+  .kpi-value {
+    font-family: var(--font-sora), 'Sora', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: #0A1628;
+    line-height: 1.1;
+  }
+  .kpi-delta {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .kpi-delta.up     { color: var(--semantic-green); }
+  .kpi-delta.down   { color: var(--semantic-red); }
+  .kpi-delta.warn   { color: var(--semantic-yellow); }
+
+  .kpi-bar {
+    height: 4px;
+    background: #D6E4F0;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .kpi-bar-fill {
+    height: 100%;
+    background: #1A6FC4;
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.0, 0.0, 0.2, 1);
+  }
+
+  /* Chart Card */
+  .chart-card {
+    background: #FFFFFF;
+    border: 1px solid #D6E4F0;
+    border-radius: 14px;
+    padding: 22px;
+  }
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .chart-title {
+    font-family: var(--font-sora), 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #0A1628;
+  }
+  .chart-subtitle {
+    font-size: 12px;
+    color: #4A6580;
+    margin-top: 2px;
+  }
+  .chart-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--semantic-green);
+    background: #E8F7F1;
+    padding: 3px 8px;
+    border-radius: 8px;
+  }
+  .chart-badge.neg {
+    color: var(--semantic-red);
+    background: #F2E8EA;
+  }
+  .chart-badge.warn {
+    color: var(--semantic-yellow);
+    background: #F5E8D8;
+  }
+
+  /* Status pills */
+  .pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .pill.high { background: #E8F7F1; color: var(--semantic-green); }
+  .pill.mid  { background: #E6F0FB; color: #1A6FC4; }
+  .pill.low  { background: #F2E8EA; color: var(--semantic-red); }
+  .pill.warn { background: #F5E8D8; color: var(--semantic-yellow); }
+
+  /* Font helpers */
+  .font-sora    { font-family: var(--font-sora), 'Sora', sans-serif; }
+  .font-dm-sans { font-family: var(--font-dm-sans), 'DM Sans', sans-serif; }
+}
+
+/* ─── Mobile overrides (max-width: 768px) ─── */
+@media (max-width: 768px) {
+  /* Chart cards: reduce padding on small screens */
+  .chart-card {
+    padding: 16px;
+  }
+
+  /* Charts: ensure full width, no horizontal overflow */
+  .chart-card .h-48 {
+    overflow-x: hidden;
+  }
+
+  /* Tables: horizontal scroll container */
+  table {
+    display: table;
+    min-width: 100%;
+  }
+}
