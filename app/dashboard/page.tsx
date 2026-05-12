@@ -9,7 +9,7 @@ import { useDateFilters } from '@/hooks/useDateFilters'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { SortIcon } from '@/components/SortIcon'
 import { CHART_PALETTE, SEMANTIC } from '@/lib/chart-colors'
-import { computeAllPeriodDeltas, readKpiGoals } from '@/lib/kpiHelpers'
+import { computeAllPeriodDeltas, computeAllPeriodTotals, readKpiGoals } from '@/lib/kpiHelpers'
 import {
   ResponsiveContainer,
   LineChart,
@@ -277,6 +277,7 @@ export default function DashboardPage() {
   }, [filteredVentas, ventasRows, filters.year, filters.month])
 
   const periodDeltas = useMemo(() => computeAllPeriodDeltas(ventasRows), [ventasRows])
+  const periodTotals = useMemo(() => computeAllPeriodTotals(ventasRows), [ventasRows])
 
   // Rolling 6-month chart — always from raw ventasRows, never affected by filters
   const monthlyChartData = useMemo(() => {
@@ -356,13 +357,12 @@ export default function DashboardPage() {
       value: formatCurrency(totalIngresos),
       delta: dvVentasDelta,
       deltaLabel: dvDeltaLabel,
-      progress: kpiGoals['ventas-totales'] > 0 ? Math.min(Math.round((totalIngresos / kpiGoals['ventas-totales']) * 100), 100) : 0,
       variant: 'default' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ventasDelta, month: periodDeltas.month.ventasDelta, year: periodDeltas.year.ventasDelta },
-      goalValue: kpiGoals['ventas-totales'],
-      currentValue: totalIngresos,
+      goalByPeriod: { week: kpiGoals['ventas-totales|semana'], month: kpiGoals['ventas-totales|mes'], year: kpiGoals['ventas-totales|año'] },
+      currentByPeriod: { week: periodTotals.week.ventas, month: periodTotals.month.ventas, year: periodTotals.year.ventas },
       goalFormat: 'currency' as const,
       noComparison: !dvHasCompData,
     },
@@ -371,13 +371,12 @@ export default function DashboardPage() {
       value: `${margenPct.toFixed(1)}%`,
       delta: dvMargenDelta,
       deltaLabel: dvDeltaLabel,
-      progress: Math.min(Math.round(margenPct), 100),
       variant: 'teal' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.margenDelta, month: periodDeltas.month.margenDelta, year: periodDeltas.year.margenDelta },
-      goalValue: kpiGoals['margen-bruto-pct'],
-      currentValue: margenPct,
+      goalByPeriod: { week: kpiGoals['margen-bruto-pct|semana'], month: kpiGoals['margen-bruto-pct|mes'], year: kpiGoals['margen-bruto-pct|año'] },
+      currentByPeriod: { week: periodTotals.week.margenPct, month: periodTotals.month.margenPct, year: periodTotals.year.margenPct },
       goalFormat: 'percent' as const,
       noComparison: !dvHasCompData,
     },
@@ -386,13 +385,12 @@ export default function DashboardPage() {
       value: formatCurrency(totalCostos),
       delta: dvCostoDelta,
       deltaLabel: dvDeltaLabel,
-      progress: totalIngresos > 0 ? Math.round((totalCostos / totalIngresos) * 100) : 0,
       variant: 'amber' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.costosDelta, month: periodDeltas.month.costosDelta, year: periodDeltas.year.costosDelta },
-      goalValue: kpiGoals['costos-totales'],
-      currentValue: totalCostos,
+      goalByPeriod: { week: kpiGoals['costos-totales|semana'], month: kpiGoals['costos-totales|mes'], year: kpiGoals['costos-totales|año'] },
+      currentByPeriod: { week: periodTotals.week.costos, month: periodTotals.month.costos, year: periodTotals.year.costos },
       goalFormat: 'currency' as const,
       noComparison: !dvHasCompData,
     },
@@ -401,13 +399,12 @@ export default function DashboardPage() {
       value: formatCurrency(ticketPromedio),
       delta: dvTicketDelta,
       deltaLabel: dvDeltaLabel,
-      progress: kpiGoals['ticket-promedio'] > 0 ? Math.min(Math.round((ticketPromedio / kpiGoals['ticket-promedio']) * 100), 100) : 0,
       variant: 'default' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ticketDelta, month: periodDeltas.month.ticketDelta, year: periodDeltas.year.ticketDelta },
-      goalValue: kpiGoals['ticket-promedio'],
-      currentValue: ticketPromedio,
+      goalByPeriod: { week: kpiGoals['ticket-promedio|semana'], month: kpiGoals['ticket-promedio|mes'], year: kpiGoals['ticket-promedio|año'] },
+      currentByPeriod: { week: periodTotals.week.ticket, month: periodTotals.month.ticket, year: periodTotals.year.ticket },
       goalFormat: 'currency' as const,
       noComparison: !dvHasCompData,
     },

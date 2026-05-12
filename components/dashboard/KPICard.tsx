@@ -13,6 +13,18 @@ export interface DeltaByPeriod {
   year: number
 }
 
+interface GoalByPeriod {
+  week?: number
+  month?: number
+  year?: number
+}
+
+interface CurrentByPeriod {
+  week: number
+  month: number
+  year: number
+}
+
 interface KPICardProps {
   label: string
   value: string
@@ -24,7 +36,10 @@ interface KPICardProps {
   // Period toggle
   deltaByPeriod?: DeltaByPeriod
   showPeriodToggle?: boolean
-  // Goal distance
+  // Period-specific goals and current values (preferred)
+  goalByPeriod?: GoalByPeriod
+  currentByPeriod?: CurrentByPeriod
+  // Fallback single-period goal (used when goalByPeriod not provided)
   goalValue?: number
   currentValue?: number
   goalFormat?: 'currency' | 'percent' | 'number'
@@ -63,6 +78,7 @@ function fmtCompact(abs: number, fmt: 'currency' | 'percent' | 'number'): string
 export function KPICard({
   label, value, delta, deltaLabel, progress, variant = 'default', periodLabel,
   deltaByPeriod, showPeriodToggle = false,
+  goalByPeriod, currentByPeriod,
   goalValue, currentValue, goalFormat = 'number', invertGoal = false,
   noComparison = false,
 }: KPICardProps) {
@@ -73,23 +89,32 @@ export function KPICard({
     : delta
   const isPositive = activeDelta >= 0
 
-  const goalDiff = goalValue !== undefined && currentValue !== undefined
+  // Period-specific goal and current value take precedence over fallback props
+  const activeGoal    = (showPeriodToggle && goalByPeriod)    ? goalByPeriod[activePeriod]    : goalValue
+  const activeCurrent = (showPeriodToggle && currentByPeriod) ? currentByPeriod[activePeriod] : currentValue
+
+  const goalDiff = activeGoal !== undefined && activeCurrent !== undefined
     ? invertGoal
-      ? goalValue - currentValue   // lower-is-better: positive when we're under the threshold
-      : currentValue - goalValue
+      ? activeGoal - activeCurrent
+      : activeCurrent - activeGoal
     : null
-  // When goalValue=0 (e.g. bajo-stock target=0), use currentValue as denominator for %
+  // When goalValue=0 (e.g. bajo-stock target=0), use activeCurrent as denominator for %
   const goalPct = goalDiff !== null
-    ? goalValue !== undefined && goalValue > 0
-      ? (Math.abs(goalDiff) / goalValue) * 100
-      : currentValue !== undefined && Math.abs(currentValue) > 0
-        ? (Math.abs(goalDiff) / Math.abs(currentValue)) * 100
+    ? activeGoal !== undefined && activeGoal > 0
+      ? (Math.abs(goalDiff) / activeGoal) * 100
+      : activeCurrent !== undefined && Math.abs(activeCurrent) > 0
+        ? (Math.abs(goalDiff) / Math.abs(activeCurrent)) * 100
         : 0
     : null
   const hasGoal = goalDiff !== null && goalPct !== null
 
   // Teal = at or above goal, red = below goal
   const goalColor = goalDiff !== null && goalDiff >= 0 ? '#0ABFBC' : '#E05C5C'
+
+  // Progress bar: computed from period-specific values when available, fallback to prop
+  const computedProgress = (activeGoal !== undefined && activeGoal > 0 && activeCurrent !== undefined)
+    ? Math.min(Math.round((activeCurrent / activeGoal) * 100), 100)
+    : progress
 
   return (
     <div className={`kpi-card ${variant !== 'default' ? variant : ''}`}>
@@ -160,9 +185,9 @@ export function KPICard({
       {/* Goal reference line — fixed height slot, always present when toggle is shown */}
       {showPeriodToggle && (
         <div style={{ height: 15, display: 'flex', alignItems: 'center' }}>
-          {goalValue !== undefined && (
+          {activeGoal !== undefined && (
             <span className="text-[10px] text-slate">
-              {fmtGoalRef(goalValue, goalFormat)} objetivo
+              {fmtGoalRef(activeGoal, goalFormat)} objetivo
             </span>
           )}
         </div>
@@ -172,9 +197,9 @@ export function KPICard({
         <span className="text-[10px] text-slate block">{periodLabel}</span>
       )}
 
-      {progress !== undefined && (
+      {computedProgress !== undefined && (
         <div className="kpi-bar">
-          <div className="kpi-bar-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
+          <div className="kpi-bar-fill" style={{ width: `${Math.min(computedProgress, 100)}%` }} />
         </div>
       )}
     </div>

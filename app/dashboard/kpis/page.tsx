@@ -52,6 +52,14 @@ interface KPIFullRow {
 }
 
 const KPI_PERIODOS: KpiPeriodo[] = ['Semana actual', 'Mes actual', 'Mes anterior', 'Trimestre', 'Año']
+
+const PERIODO_GOAL_KEY: Record<KpiPeriodo, string> = {
+  'Semana actual': 'semana',
+  'Mes actual':    'mes',
+  'Mes anterior':  'mes',
+  'Trimestre':     'trimestre',
+  'Año':           'año',
+}
 const KPI_SECCIONES: Array<'Todas' | KpiSeccion> = ['Todas', 'Ventas', 'Financiero', 'Inventario', 'Clientes']
 const KPI_ESTADOS: Array<'Todos' | KpiEstado> = ['Todos', 'En meta', 'Cerca', 'Crítico']
 
@@ -109,6 +117,7 @@ function computeKpiRows(
   inventario: InventarioRow[],
   clientes: ClienteRow[],
   userGoals: Record<string, number>,
+  periodKey: string,
 ): KPIFullRow[] {
   // ── Ventas aggregation ─────────────────────────────────────────────────────
   let totalIngresos = 0, totalCostos = 0, totalUnidades = 0, txCount = 0
@@ -133,7 +142,7 @@ function computeKpiRows(
     ? Array.from(monthlyVentasMap.values()).reduce((a, b) => a + b, 0) / allMonths.length
     : 0
 
-  const g = (key: string, def: number) => userGoals[key] ?? def
+  const g = (key: string, def: number) => userGoals[`${key}|${periodKey}`] ?? userGoals[key] ?? def
 
   const rows: KPIFullRow[] = []
 
@@ -315,8 +324,8 @@ export default function KPIsPage() {
   const ventasFiltered = useMemo(() => filterVentasByPeriodo(ventas, periodo), [ventas, periodo])
 
   const allKpiRows = useMemo(
-    () => computeKpiRows(ventasFiltered, ventas, inventario, clientes, goals),
-    [ventasFiltered, ventas, inventario, clientes, goals],
+    () => computeKpiRows(ventasFiltered, ventas, inventario, clientes, goals, PERIODO_GOAL_KEY[periodo]),
+    [ventasFiltered, ventas, inventario, clientes, goals, periodo],
   )
 
   const filteredKpiRows = useMemo(() => {
@@ -333,7 +342,7 @@ export default function KPIsPage() {
 
   function saveGoal(key: string) {
     const val = parseFloat(editValue)
-    if (!isNaN(val) && val >= 0) updateGoal(key, val)
+    if (!isNaN(val) && val >= 0) updateGoal(`${key}|${PERIODO_GOAL_KEY[periodo]}`, val)
   }
 
   if (loading) {
@@ -520,7 +529,13 @@ export default function KPIsPage() {
                 <th {...thProps('indicador', 'left')}>Indicador <SortIcon column="indicador" config={sortConfig} /></th>
                 <th {...thProps('seccion', 'left')}>Sección <SortIcon column="seccion" config={sortConfig} /></th>
                 <th {...thProps('valorActual')}>Valor actual <SortIcon column="valorActual" config={sortConfig} /></th>
-                <th {...thProps('objetivo')}>Objetivo <SortIcon column="objetivo" config={sortConfig} /></th>
+                <th {...thProps('objetivo')}>
+                  Objetivo&nbsp;
+                  <span className="font-normal text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: '#EBF4FF', color: '#1A6FC4' }}>
+                    {PERIODO_GOAL_KEY[periodo]}
+                  </span>
+                  &nbsp;<SortIcon column="objetivo" config={sortConfig} />
+                </th>
                 <th {...thProps('cumplimiento')}>Cumplimiento <SortIcon column="cumplimiento" config={sortConfig} /></th>
                 <th {...thProps('estado')}>Estado <SortIcon column="estado" config={sortConfig} /></th>
               </tr>

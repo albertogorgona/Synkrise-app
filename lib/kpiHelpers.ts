@@ -107,3 +107,51 @@ export function computeAllPeriodDeltas(ventas: VentaForDelta[]): AllPeriodDeltas
 
   return { week: weekDeltas, month: monthDeltas, year: yearDeltas }
 }
+
+// ─── Period totals (absolute values per period) ───────────────────────────────
+
+export interface PeriodTotals {
+  ventas: number
+  costos: number
+  unidades: number
+  txCount: number
+  margenPct: number
+  ticket: number
+}
+
+export interface AllPeriodTotals {
+  week: PeriodTotals
+  month: PeriodTotals
+  year: PeriodTotals
+}
+
+function aggToTotals(agg: PeriodAgg): PeriodTotals {
+  return {
+    ventas:    agg.v,
+    costos:    agg.c,
+    unidades:  agg.u,
+    txCount:   agg.tx,
+    margenPct: agg.v > 0 ? ((agg.v - agg.c) / agg.v) * 100 : 0,
+    ticket:    agg.tx > 0 ? agg.v / agg.tx : 0,
+  }
+}
+
+const ZERO_TOTALS: PeriodTotals = { ventas: 0, costos: 0, unidades: 0, txCount: 0, margenPct: 0, ticket: 0 }
+
+export function computeAllPeriodTotals(ventas: VentaForDelta[]): AllPeriodTotals {
+  if (ventas.length === 0) return { week: ZERO_TOTALS, month: ZERO_TOTALS, year: ZERO_TOTALS }
+
+  const sortedDates = [...new Set(ventas.map(r => r.fecha))].sort()
+  const sortedMonths = [...new Set(ventas.map(r => r.fecha.substring(0, 7)))].sort()
+  const sortedYears  = [...new Set(ventas.map(r => r.fecha.substring(0, 4)))].sort()
+
+  const curWeekSet = new Set(sortedDates.slice(-7))
+  const curMonth   = sortedMonths.at(-1) ?? ''
+  const curYear    = sortedYears.at(-1)  ?? ''
+
+  return {
+    week:  aggToTotals(aggRows(ventas.filter(r => curWeekSet.has(r.fecha)))),
+    month: aggToTotals(aggRows(ventas.filter(r => r.fecha.startsWith(curMonth)))),
+    year:  aggToTotals(aggRows(ventas.filter(r => r.fecha.startsWith(curYear)))),
+  }
+}
