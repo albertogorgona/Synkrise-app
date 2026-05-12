@@ -101,6 +101,18 @@ Después de cada bloque de cambios importantes, correr:
 
 Cada vez que se complete una actualización de un archivo, abrirlo directamente en el IDE para que el usuario pueda verificarlo visualmente. Esto aplica a cualquier archivo creado o modificado durante una tarea.
 
+## Fase de producción — flujo obligatorio Git
+
+El proyecto está en producción en https://synkrise-app.vercel.app/. Vercel despliega automáticamente desde `main`. **Cada vez que se termine una tarea**, sin excepción:
+
+1. `npm run typecheck` — sin errores TypeScript
+2. `npm run build` — compilación limpia
+3. `git add <archivos modificados>`
+4. `git commit -m "tipo: descripción"`
+5. `git push origin main`
+
+**No dar una tarea por terminada si no se hizo el push.** Un commit sin push no existe en producción.
+
 ## Skills disponibles
 Para animaciones → ver `.claude/skills/animations.md`
 Para UI/diseño → ver `.claude/skills/design.md`
