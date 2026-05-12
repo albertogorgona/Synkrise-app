@@ -627,6 +627,7 @@ export default function DatosPage() {
   const [importedCount, setImportedCount] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [fileLibrary, setFileLibrary] = useState<FileRecord[]>([])
+  const [replaceVentas, setReplaceVentas] = useState(false)
   const pendingFileRef = useRef<Omit<FileRecord, 'status'> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -648,6 +649,7 @@ export default function DatosPage() {
     setRowErrors([])
     setError(null)
     setProgress(0)
+    setReplaceVentas(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
     setStep('upload')
   }
@@ -659,6 +661,7 @@ export default function DatosPage() {
     setRowErrors([])
     setError(null)
     setProgress(0)
+    setReplaceVentas(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -715,7 +718,8 @@ export default function DatosPage() {
       return
     }
 
-    if (config.replaceOnImport) {
+    const shouldReplace = config.replaceOnImport || (activeModuleId === 'ventas' && replaceVentas)
+    if (shouldReplace) {
       const { error: deleteError } = await supabase
         .from(config.table)
         .delete()
@@ -888,6 +892,35 @@ export default function DatosPage() {
               if (file) processFile(file)
             }}
           />
+
+          {activeModuleId === 'ventas' && (
+            <div
+              className="mt-4 flex items-start gap-3 px-4 py-3 rounded-[9px] cursor-pointer"
+              style={{ background: replaceVentas ? '#FEF3E2' : '#F0F4FA', border: `1px solid ${replaceVentas ? '#FDE68A' : '#D6E4F0'}` }}
+              onClick={() => setReplaceVentas(!replaceVentas)}
+            >
+              <div
+                className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors"
+                style={{ background: replaceVentas ? '#F59E0B' : '#FFFFFF', border: `2px solid ${replaceVentas ? '#F59E0B' : '#D6E4F0'}` }}
+              >
+                {replaceVentas && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: replaceVentas ? '#92400E' : '#0A1628' }}>
+                  Reemplazar datos existentes de ventas
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: replaceVentas ? '#78350F' : '#4A6580' }}>
+                  {replaceVentas
+                    ? '⚠ Se eliminarán todos los registros anteriores antes de importar'
+                    : 'Por defecto, los nuevos registros se agregan al historial existente'}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="mt-4 flex flex-col md:flex-row gap-3">
             {error && (
