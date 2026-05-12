@@ -346,7 +346,7 @@ export default function InventarioPage() {
           <div className="flex justify-end mb-2">
             <GlobalBadge />
           </div>
-          <div className="flex-1 min-h-0">
+          <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={rotacionData} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#4A6580' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}x`} />
