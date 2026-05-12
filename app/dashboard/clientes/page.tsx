@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { TrackableElement } from '@/components/TrackableElement'
@@ -90,8 +90,20 @@ export default function ClientesPage() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useDateFilters()
   const [kpiGoals, setKpiGoals] = useState<Record<string, number>>({})
+  const autoSelectedRef = useRef(false)
 
   useEffect(() => { setKpiGoals(readKpiGoals()) }, [])
+
+  // Auto-select most recent year from ultima_compra — always overrides stale sessionStorage
+  useEffect(() => {
+    if (autoSelectedRef.current || clientes.length === 0) return
+    const years = [...new Set(clientes.map(c => parseInt((c.ultima_compra ?? '').substring(0, 4))))]
+      .filter(y => !isNaN(y) && y > 1900 && y < 3000)
+      .sort((a, b) => b - a)
+    if (years.length === 0) return
+    autoSelectedRef.current = true
+    setFilters({ year: years[0], month: null, day: null })
+  }, [clientes, setFilters])
 
   useEffect(() => {
     const supabase = createClient()

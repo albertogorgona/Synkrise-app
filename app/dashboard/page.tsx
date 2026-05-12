@@ -93,15 +93,14 @@ export default function DashboardPage() {
 
   useEffect(() => { setKpiGoals(readKpiGoals()) }, [])
 
-  // Auto-select most recent year on first data load
+  // Auto-select most recent year on first data load — always overrides stale sessionStorage
   useEffect(() => {
-    if (autoSelectedRef.current || filters.year !== null || ventasRows.length === 0) return
-    const years = [...new Set(ventasRows.map(r => parseInt(r.fecha.substring(0, 4))))].filter(y => !isNaN(y)).sort((a, b) => b - a)
-    if (years.length > 0) {
-      autoSelectedRef.current = true
-      setFilters({ year: years[0], month: null, day: null })
-    }
-  }, [ventasRows, filters.year, setFilters])
+    if (autoSelectedRef.current || ventasRows.length === 0) return
+    const years = [...new Set(ventasRows.map(r => parseInt(r.fecha.substring(0, 4))))].filter(y => !isNaN(y) && y > 1900 && y < 3000).sort((a, b) => b - a)
+    if (years.length === 0) return
+    autoSelectedRef.current = true
+    setFilters({ year: years[0], month: null, day: null })
+  }, [ventasRows, setFilters])
 
   useEffect(() => {
     const supabase = createClient()
@@ -338,7 +337,7 @@ export default function DashboardPage() {
   }
 
   const {
-    latestPeriod, topProducts, categoryData,
+    latestPeriod, categoryData,
     totalIngresos, totalCostos, margenPct, ticketPromedio,
     dvVentasDelta, dvMargenDelta, dvTicketDelta, dvCostoDelta, dvDeltaLabel,
     dvHasCompData,

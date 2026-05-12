@@ -92,13 +92,12 @@ export default function VentasPage() {
   useEffect(() => { setKpiGoals(readKpiGoals()) }, [])
 
   useEffect(() => {
-    if (autoSelectedRef.current || filters.year !== null || ventas.length === 0) return
-    const years = [...new Set(ventas.map(r => parseInt(r.fecha.substring(0, 4))))].filter(y => !isNaN(y)).sort((a, b) => b - a)
-    if (years.length > 0) {
-      autoSelectedRef.current = true
-      setFilters({ year: years[0], month: null, day: null })
-    }
-  }, [ventas, filters.year, setFilters])
+    if (autoSelectedRef.current || ventas.length === 0) return
+    const years = [...new Set(ventas.map(r => parseInt(r.fecha.substring(0, 4))))].filter(y => !isNaN(y) && y > 1900 && y < 3000).sort((a, b) => b - a)
+    if (years.length === 0) return
+    autoSelectedRef.current = true
+    setFilters({ year: years[0], month: null, day: null })
+  }, [ventas, setFilters])
 
   useEffect(() => {
     const supabase = createClient()

@@ -136,3 +136,15 @@ Cada vez que encuentres un error durante el desarrollo:
 - **Error**: TypeScript hint `'FormEvent' is deprecated` (code 6385) en handlers `onSubmit`.
 - **Causa**: En React 19 (`@types/react` v19) los tipos sintéticos de eventos como `FormEvent` fueron deprecados.
 - **Solución**: Usar tipo estructural explícito: `e: { preventDefault(): void; currentTarget: HTMLFormElement }` en lugar de `React.FormEvent<HTMLFormElement>`.
+
+### Auto-select de año bloqueado por sessionStorage stale
+- **Error**: El dashboard muestra datos del año incorrecto (ej: 2023) aunque se importaron datos de 2025.
+- **Causa**: `useDateFilters` restaura el filtro `year` desde `sessionStorage`. La lógica de auto-select en `dashboard/page.tsx` y `ventas/page.tsx` tenía la condición `filters.year !== null` que BLOQUEABA el auto-select si había un año guardado, sin validar si ese año existe en los datos actuales. `clientes/page.tsx` no tenía auto-select en absoluto.
+- **Solución**: Eliminar la condición `filters.year !== null` del guard. El auto-select ahora SIEMPRE selecciona el año más reciente en el primer cargado de datos, ignorando sessionStorage. Incluye filtro `y > 1900 && y < 3000` para descartar seriales de Excel que lleguen como año (ej: 4565).
+- **Archivos**: `app/dashboard/page.tsx`, `app/dashboard/ventas/page.tsx`, `app/dashboard/clientes/page.tsx`.
+
+### Fechas de Excel almacenadas como números seriales en Supabase
+- **Error**: Fechas importadas de Excel se guardan como strings tipo "45659" en lugar de "2025-01-05".
+- **Causa**: La función `toDateString` en `app/dashboard/datos/page.tsx` no manejaba valores de tipo `number`. Cuando SheetJS no convierte una celda de fecha a `Date` object (edge case con `raw: true`), el serial numérico de Excel (ej: `45659`) llegaba como `number` y se convertía a string directamente. Además usaba `getFullYear()` (hora local) en vez de `getUTCFullYear()` (UTC), causando desfase de 1 día en zonas UTC negativas.
+- **Solución**: Agregar `excelSerialToDate()` helper en `datos/page.tsx` y añadir el branch `if (typeof val === 'number') return excelSerialToDate(val)`. Cambiar `getFullYear/Month/Date` → `getUTCFullYear/Month/Date` para consistencia con `importExcel.ts`.
+- **Archivo**: `app/dashboard/datos/page.tsx`.

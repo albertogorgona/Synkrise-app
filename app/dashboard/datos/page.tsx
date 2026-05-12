@@ -58,14 +58,24 @@ interface ModuleConfig {
 
 const BATCH_SIZE = 100
 
+function excelSerialToDate(serial: number): string {
+  const utcDays = serial - 25569
+  const date = new Date(utcDays * 86400 * 1000)
+  const y = date.getUTCFullYear()
+  const m = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(date.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 function toDateString(val: string | number | boolean | Date | null | undefined): string {
   if (val instanceof Date) {
-    const y = val.getFullYear()
-    const m = String(val.getMonth() + 1).padStart(2, '0')
-    const d = String(val.getDate()).padStart(2, '0')
+    const y = val.getUTCFullYear()
+    const m = String(val.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(val.getUTCDate()).padStart(2, '0')
     return `${y}-${m}-${d}`
   }
-  const s = String(val ?? '')
+  if (typeof val === 'number') return excelSerialToDate(val)
+  const s = String(val ?? '').trim()
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10)
   const match = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
   if (match) return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
