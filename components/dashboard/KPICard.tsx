@@ -75,8 +75,13 @@ export function KPICard({
       ? goalValue - currentValue   // lower-is-better: positive when we're under the threshold
       : currentValue - goalValue
     : null
-  const goalPct = goalDiff !== null && goalValue !== undefined && goalValue > 0
-    ? (Math.abs(goalDiff) / goalValue) * 100
+  // When goalValue=0 (e.g. bajo-stock target=0), use currentValue as denominator for %
+  const goalPct = goalDiff !== null
+    ? goalValue !== undefined && goalValue > 0
+      ? (Math.abs(goalDiff) / goalValue) * 100
+      : currentValue !== undefined && Math.abs(currentValue) > 0
+        ? (Math.abs(goalDiff) / Math.abs(currentValue)) * 100
+        : 0
     : null
   const hasGoal = goalDiff !== null && goalPct !== null
 
@@ -125,7 +130,7 @@ export function KPICard({
           </span>
         </span>
 
-        {hasGoal && (
+        {hasGoal ? (
           <span className="flex items-center gap-1.5 flex-shrink-0">
             <span style={{ display: 'inline-block', width: 1, height: 14, background: '#D6E4F0', opacity: 0.8, flexShrink: 0 }} />
             <span style={{ color: goalColor, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', lineHeight: 1 }}>
@@ -137,7 +142,11 @@ export function KPICard({
               }
             </span>
           </span>
-        )}
+        ) : showPeriodToggle ? (
+          <span style={{ color: '#B0C4D8', fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, lineHeight: 1 }}>
+            — sin objetivo
+          </span>
+        ) : null}
       </div>
 
       {/* Goal reference line — fixed height slot, always present when toggle is shown */}
