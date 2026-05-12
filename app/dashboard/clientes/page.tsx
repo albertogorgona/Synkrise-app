@@ -218,25 +218,25 @@ export default function ClientesPage() {
     {
       label: 'Total Clientes', value: fmtNum(totalClientes), delta: 0, deltaLabel: 'registrados',
       progress: 100, variant: 'default' as const, periodLabel,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
       goalValue: kpiGoals['total-clientes'], currentValue: totalClientes, goalFormat: 'number' as const,
     },
     {
       label: 'Facturación Total', value: fmtCur(facturacionTotal), delta: 0, deltaLabel: 'acumulada',
       progress: 78, variant: 'teal' as const, periodLabel,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
       goalValue: kpiGoals['facturacion-clientes'], currentValue: facturacionTotal, goalFormat: 'currency' as const,
     },
     {
       label: 'Promedio Compras', value: promedioCompras.toFixed(1), delta: 0, deltaLabel: 'compras por cliente',
       progress: Math.min(Math.round(promedioCompras * 5), 100), variant: 'amber' as const, periodLabel,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
       goalValue: kpiGoals['promedio-compras'], currentValue: promedioCompras, goalFormat: 'number' as const,
     },
     {
       label: 'Ticket Promedio', value: fmtCur(ticketPromedio), delta: 0, deltaLabel: 'facturación / compras',
       progress: 65, variant: 'default' as const, periodLabel,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
     },
   ]
 

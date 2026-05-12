@@ -3,6 +3,7 @@ import { Features } from '@/components/marketing/Features'
 import { HowItWorks } from '@/components/marketing/HowItWorks'
 import { Pricing } from '@/components/marketing/Pricing'
 import { Testimonials } from '@/components/marketing/Testimonials'
+import { Nosotros } from '@/components/marketing/Nosotros'
 import { CTAFinal } from '@/components/marketing/CTAFinal'
 import { Footer } from '@/components/marketing/Footer'
 
@@ -41,6 +42,7 @@ export default function LandingPage() {
       <HowItWorks />
       <Pricing />
       <Testimonials />
+      <Nosotros />
       <CTAFinal />
       <Footer />
     </>

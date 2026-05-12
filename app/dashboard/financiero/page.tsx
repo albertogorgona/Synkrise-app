@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { TrackableElement } from '@/components/TrackableElement'
@@ -89,8 +89,18 @@ export default function FinancieroPage() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useDateFilters()
   const [kpiGoals, setKpiGoals] = useState<Record<string, number>>({})
+  const autoSelectedRef = useRef(false)
 
   useEffect(() => { setKpiGoals(readKpiGoals()) }, [])
+
+  useEffect(() => {
+    if (autoSelectedRef.current || filters.year !== null || ventas.length === 0) return
+    const years = [...new Set(ventas.map(r => parseInt(r.fecha.substring(0, 4))))].filter(y => !isNaN(y)).sort((a, b) => b - a)
+    if (years.length > 0) {
+      autoSelectedRef.current = true
+      setFilters({ year: years[0], month: null, day: null })
+    }
+  }, [ventas, filters.year, setFilters])
 
   useEffect(() => {
     const supabase = createClient()
@@ -218,6 +228,7 @@ export default function FinancieroPage() {
       financialMonthly, current, margenBruto, latestPeriodLabel, waterfallData,
       curIngresos, prevIngresos, curCostos, prevCostos,
       curEbitda, prevEbitda, curMargenPct, prevMargenPct, deltaLabel,
+      hasCompData: prevIngresos > 0,
     }
   }, [filtered, ventas, filters.year, filters.month])
 
@@ -269,9 +280,12 @@ export default function FinancieroPage() {
   const {
     financialMonthly, current, margenBruto, latestPeriodLabel, waterfallData,
     curIngresos, prevIngresos, curCostos, prevCostos,
-    curEbitda, prevEbitda, curMargenPct, prevMargenPct, deltaLabel,
+    curEbitda, prevEbitda, curMargenPct, prevMargenPct, deltaLabel, hasCompData,
   } = derived
   const periodLabel = buildPeriodLabel(filters.year, filters.month, filters.day)
+  const displayPeriod = filters.month && filters.year
+    ? `${MONTH_NAMES[filters.month]} ${filters.year}`
+    : filters.year ? String(filters.year) : latestPeriodLabel
 
   const FINANCIERO_KPI_LABELS: Record<string, string> = {
     'Ingresos Totales': 'KPI de Ingresos Totales del último mes',
@@ -288,6 +302,7 @@ export default function FinancieroPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ingresosDelta, month: periodDeltas.month.ingresosDelta, year: periodDeltas.year.ingresosDelta },
       goalValue: kpiGoals['ventas-totales'], currentValue: current.ingresos, goalFormat: 'currency' as const,
+      noComparison: !hasCompData,
     },
     {
       label: 'Costos Totales', value: fmt(current.costos),
@@ -296,6 +311,7 @@ export default function FinancieroPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.costosDelta, month: periodDeltas.month.costosDelta, year: periodDeltas.year.costosDelta },
       goalValue: kpiGoals['costos-totales'], currentValue: current.costos, goalFormat: 'currency' as const,
+      noComparison: !hasCompData,
     },
     {
       label: 'Margen Bruto', value: fmt(current.ebitda),
@@ -304,6 +320,7 @@ export default function FinancieroPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ventasDelta, month: periodDeltas.month.ventasDelta, year: periodDeltas.year.ventasDelta },
       goalValue: kpiGoals['margen-bruto-usd'], currentValue: current.ebitda, goalFormat: 'currency' as const,
+      noComparison: !hasCompData,
     },
     {
       label: 'Margen %', value: `${margenBruto.toFixed(1)}%`,
@@ -312,6 +329,7 @@ export default function FinancieroPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.margenDelta, month: periodDeltas.month.margenDelta, year: periodDeltas.year.margenDelta },
       goalValue: kpiGoals['margen-bruto-pct'], currentValue: margenBruto, goalFormat: 'percent' as const,
+      noComparison: !hasCompData,
     },
   ]
 
@@ -327,7 +345,7 @@ export default function FinancieroPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="font-sora text-[22px] font-bold text-ink tracking-tight">Financiero</h1>
-          <p className="text-slate text-sm mt-0.5">Estado financiero de tu negocio — {latestPeriodLabel}</p>
+          <p className="text-slate text-sm mt-0.5">Estado financiero de tu negocio — {displayPeriod}</p>
         </div>
         <span className="text-xs font-medium px-3 py-1.5 rounded-[8px] self-start sm:self-auto" style={{ background: '#E0F8F8', color: '#0ABFBC' }}>
           Datos actualizados

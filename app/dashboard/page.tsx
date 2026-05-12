@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { TrackableElement } from '@/components/TrackableElement'
@@ -103,8 +103,19 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useDateFilters()
   const [kpiGoals, setKpiGoals] = useState<Record<string, number>>({})
+  const autoSelectedRef = useRef(false)
 
   useEffect(() => { setKpiGoals(readKpiGoals()) }, [])
+
+  // Auto-select most recent year on first data load
+  useEffect(() => {
+    if (autoSelectedRef.current || filters.year !== null || ventasRows.length === 0) return
+    const years = [...new Set(ventasRows.map(r => parseInt(r.fecha.substring(0, 4))))].filter(y => !isNaN(y)).sort((a, b) => b - a)
+    if (years.length > 0) {
+      autoSelectedRef.current = true
+      setFilters({ year: years[0], month: null, day: null })
+    }
+  }, [ventasRows, filters.year, setFilters])
 
   useEffect(() => {
     const supabase = createClient()
@@ -286,6 +297,7 @@ export default function DashboardPage() {
     return {
       currentKpis, previousKpis, latestPeriod, topProducts, categoryData,
       dvVentasDelta, dvMargenDelta, dvTicketDelta, dvCostoDelta, dvDeltaLabel,
+      dvHasCompData: dvPrevV > 0,
     }
   }, [filteredVentas, filteredKpis, ventasRows, filters.year, filters.month])
 
@@ -350,10 +362,17 @@ export default function DashboardPage() {
   }
 
   const {
-    currentKpis, previousKpis, latestPeriod, topProducts, categoryData,
+    currentKpis, latestPeriod, topProducts, categoryData,
     dvVentasDelta, dvMargenDelta, dvTicketDelta, dvCostoDelta, dvDeltaLabel,
+    dvHasCompData,
   } = derived
   const periodLabel = buildPeriodLabel(filters.year, filters.month, filters.day)
+
+  const displayPeriod = filters.month && filters.year
+    ? `${MONTH_NAMES[filters.month]} ${filters.year}`
+    : filters.year
+      ? String(filters.year)
+      : latestPeriod
 
   const kpis = [
     {
@@ -369,6 +388,7 @@ export default function DashboardPage() {
       goalValue: kpiGoals['ventas-totales'],
       currentValue: currentKpis?.ventas_totales ?? 0,
       goalFormat: 'currency' as const,
+      noComparison: !dvHasCompData,
     },
     {
       label: 'Margen Bruto',
@@ -383,6 +403,7 @@ export default function DashboardPage() {
       goalValue: kpiGoals['margen-bruto-pct'],
       currentValue: currentKpis?.margen_bruto_pct ?? 0,
       goalFormat: 'percent' as const,
+      noComparison: !dvHasCompData,
     },
     {
       label: 'Costo Operativo',
@@ -397,6 +418,7 @@ export default function DashboardPage() {
       goalValue: kpiGoals['costos-totales'],
       currentValue: currentKpis?.costo_operativo ?? 0,
       goalFormat: 'currency' as const,
+      noComparison: !dvHasCompData,
     },
     {
       label: 'Ticket Promedio',
@@ -411,6 +433,7 @@ export default function DashboardPage() {
       goalValue: kpiGoals['ticket-promedio'],
       currentValue: currentKpis?.ticket_promedio ?? 0,
       goalFormat: 'currency' as const,
+      noComparison: !dvHasCompData,
     },
   ]
 
@@ -434,7 +457,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="font-sora text-[22px] font-bold text-ink tracking-tight">Dashboard</h1>
-          <p className="text-slate text-sm mt-0.5">Resumen de tu operación — {latestPeriod}</p>
+          <p className="text-slate text-sm mt-0.5">Resumen de tu operación — {displayPeriod}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-medium px-3 py-1.5 rounded-[8px]" style={{ background: '#E0F8F8', color: '#0ABFBC' }}>

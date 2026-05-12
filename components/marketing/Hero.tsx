@@ -213,7 +213,7 @@ export function Hero() {
                 Empieza gratis — 14 días sin costo
               </Link>
               <Link
-                href="/dashboard"
+                href="/demo"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border
                            border-synk-border text-ink font-medium text-sm rounded-xl
                            hover:bg-synk-border/40 transition-colors duration-100"

@@ -21,8 +21,7 @@ const plans: Plan[] = [
     period: '/mes',
     description: 'Para empezar a tomar decisiones con datos.',
     features: [
-      '1 usuario',
-      'Hasta 10 usuarios adicionales (precio por usuario extra)',
+      'Hasta 3 usuarios',
       '2 Dashboards',
       'KPIs seleccionables por el usuario',
       'Import Excel / CSV',

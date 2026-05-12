@@ -243,7 +243,7 @@ export default function InventarioPage() {
     {
       label: 'Total Productos', value: fmtNum(totalProductos), delta: 0, deltaLabel: 'en inventario',
       progress: 100, variant: 'default' as const,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
       goalValue: kpiGoals['total-productos'], currentValue: totalProductos, goalFormat: 'number' as const,
     },
     {
@@ -251,19 +251,19 @@ export default function InventarioPage() {
       delta: totalProductos > 0 ? -(bajoMinimo / totalProductos) * 100 : 0, deltaLabel: `de ${totalProductos} productos`,
       progress: totalProductos > 0 ? Math.round((bajoMinimo / totalProductos) * 100) : 0,
       variant: bajoMinimo > 0 ? 'red' as const : 'teal' as const,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
       goalValue: kpiGoals['bajo-stock'], currentValue: bajoMinimo, goalFormat: 'number' as const, invertGoal: true,
     },
     {
       label: 'Rotación Promedio', value: `${rotacionProm.toFixed(1)}x`, delta: 0, deltaLabel: 'veces por período',
       progress: Math.min(Math.round(rotacionProm * 10), 100), variant: 'teal' as const,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
       goalValue: kpiGoals['rotacion-promedio'], currentValue: rotacionProm, goalFormat: 'number' as const,
     },
     {
       label: 'Valor Inventario', value: fmtCur(valorInventario), delta: 0, deltaLabel: 'stock × costo unit.',
       progress: 72, variant: 'amber' as const,
-      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD,
+      showPeriodToggle: true, deltaByPeriod: ZERO_PERIOD, noComparison: true,
       goalValue: kpiGoals['valor-inventario'], currentValue: valorInventario, goalFormat: 'currency' as const,
     },
   ]

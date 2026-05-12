@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { TrackableElement } from '@/components/TrackableElement'
@@ -87,8 +87,18 @@ export default function VentasPage() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useDateFilters()
   const [kpiGoals, setKpiGoals] = useState<Record<string, number>>({})
+  const autoSelectedRef = useRef(false)
 
   useEffect(() => { setKpiGoals(readKpiGoals()) }, [])
+
+  useEffect(() => {
+    if (autoSelectedRef.current || filters.year !== null || ventas.length === 0) return
+    const years = [...new Set(ventas.map(r => parseInt(r.fecha.substring(0, 4))))].filter(y => !isNaN(y)).sort((a, b) => b - a)
+    if (years.length > 0) {
+      autoSelectedRef.current = true
+      setFilters({ year: years[0], month: null, day: null })
+    }
+  }, [ventas, filters.year, setFilters])
 
   useEffect(() => {
     const supabase = createClient()
@@ -262,6 +272,7 @@ export default function VentasPage() {
       ticketLast, ticketPrev, margenLast, margenPrev, ventasMoM,
       categoryData, topProducts, latestPeriodLabel,
       smallSample, deltaLabel,
+      dvHasCompData: prevVentas > 0,
     }
   }, [filtered, ventas, filters.year, filters.month])
 
@@ -327,10 +338,16 @@ export default function VentasPage() {
     lastVentas, prevVentas, lastUnidades, prevUnidades,
     ticketLast, ticketPrev, margenLast, margenPrev, ventasMoM,
     categoryData, latestPeriodLabel,
-    smallSample, deltaLabel,
+    smallSample, deltaLabel, dvHasCompData,
   } = derived
 
   const periodLabel = buildPeriodLabel(filters.year, filters.month, filters.day)
+
+  const displayPeriod = filters.month && filters.year
+    ? `${MONTH_NAMES[filters.month]} ${filters.year}`
+    : filters.year
+      ? String(filters.year)
+      : latestPeriodLabel
 
   const VENTAS_KPI_LABELS: Record<string, string> = {
     'Ventas Totales':    'KPI de Ventas Totales del último mes',
@@ -347,6 +364,7 @@ export default function VentasPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ventasDelta, month: periodDeltas.month.ventasDelta, year: periodDeltas.year.ventasDelta },
       goalValue: kpiGoals['ventas-totales'], currentValue: lastVentas, goalFormat: 'currency' as const,
+      noComparison: !dvHasCompData,
     },
     {
       label: 'Unidades Vendidas', value: lastUnidades.toLocaleString('es-PA'),
@@ -355,6 +373,7 @@ export default function VentasPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.unidadesDelta, month: periodDeltas.month.unidadesDelta, year: periodDeltas.year.unidadesDelta },
       goalValue: kpiGoals['unidades-vendidas'], currentValue: lastUnidades, goalFormat: 'number' as const,
+      noComparison: !dvHasCompData,
     },
     {
       label: 'Ticket Promedio', value: fmt(ticketLast),
@@ -363,6 +382,7 @@ export default function VentasPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ticketDelta, month: periodDeltas.month.ticketDelta, year: periodDeltas.year.ticketDelta },
       goalValue: kpiGoals['ticket-promedio'], currentValue: ticketLast, goalFormat: 'currency' as const,
+      noComparison: !dvHasCompData,
     },
     {
       label: 'Margen Bruto', value: `${margenLast.toFixed(1)}%`,
@@ -371,6 +391,7 @@ export default function VentasPage() {
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.margenDelta, month: periodDeltas.month.margenDelta, year: periodDeltas.year.margenDelta },
       goalValue: kpiGoals['margen-bruto-pct'], currentValue: margenLast, goalFormat: 'percent' as const,
+      noComparison: !dvHasCompData,
     },
   ]
 
@@ -386,7 +407,7 @@ export default function VentasPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="font-sora text-[22px] font-bold text-ink tracking-tight">Ventas</h1>
-          <p className="text-slate text-sm mt-0.5">Análisis detallado de tus ventas — {latestPeriodLabel}</p>
+          <p className="text-slate text-sm mt-0.5">Análisis detallado de tus ventas — {displayPeriod}</p>
         </div>
         <span className="text-xs font-medium px-3 py-1.5 rounded-[8px] self-start sm:self-auto" style={{ background: '#E0F8F8', color: '#0ABFBC' }}>
           Datos actualizados

@@ -39,7 +39,7 @@ function StarRating() {
 
 export function Testimonials() {
   return (
-    <section id="nosotros" className="py-24 bg-surface">
+    <section id="testimonios" className="py-24 bg-surface">
       <div className="max-w-6xl mx-auto px-6">
         <FadeIn className="text-center mb-16">
           <span className="text-xs font-semibold uppercase tracking-widest text-synk-accent">

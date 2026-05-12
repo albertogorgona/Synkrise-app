@@ -30,6 +30,8 @@ interface KPICardProps {
   goalFormat?: 'currency' | 'percent' | 'number'
   // Set true for metrics where lower is better (e.g. bajo stock, costos)
   invertGoal?: boolean
+  // Set true when no comparison data exists (shows "Sin datos comparativos")
+  noComparison?: boolean
 }
 
 function fmtGoalRef(val: number, fmt: 'currency' | 'percent' | 'number'): string {
@@ -62,6 +64,7 @@ export function KPICard({
   label, value, delta, deltaLabel, progress, variant = 'default', periodLabel,
   deltaByPeriod, showPeriodToggle = false,
   goalValue, currentValue, goalFormat = 'number', invertGoal = false,
+  noComparison = false,
 }: KPICardProps) {
   const [activePeriod, setActivePeriod] = useState<CardPeriod>('month')
 
@@ -118,33 +121,38 @@ export function KPICard({
 
       {/* Delta + goal indicator — fixed height */}
       <div className="flex items-center justify-between gap-2" style={{ height: 20 }}>
-        <span
-          className={`kpi-delta ${isPositive ? 'up' : 'down'}`}
-          style={{ flex: '0 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-        >
-          {isPositive ? '↑' : '↓'} {isPositive ? '+' : ''}{activeDelta.toFixed(1)}%
-          <span className="ml-1 text-slate text-[11px]">
-            {showPeriodToggle && deltaByPeriod
-              ? `vs ${PERIOD_VS[activePeriod]}`
-              : deltaLabel}
+        {noComparison ? (
+          <span style={{ color: '#B0C4D8', fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap', lineHeight: 1 }}>
+            Sin datos comparativos
           </span>
-        </span>
+        ) : (
+          <span
+            className={`kpi-delta ${isPositive ? 'up' : 'down'}`}
+            style={{ flex: '0 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {isPositive ? '↑' : '↓'} {isPositive ? '+' : ''}{activeDelta.toFixed(1)}%
+            <span className="ml-1 text-slate text-[11px]">
+              {showPeriodToggle && deltaByPeriod
+                ? `vs ${PERIOD_VS[activePeriod]}`
+                : deltaLabel}
+            </span>
+          </span>
+        )}
 
         {hasGoal ? (
           <span className="flex items-center gap-1.5 flex-shrink-0">
             <span style={{ display: 'inline-block', width: 1, height: 14, background: '#D6E4F0', opacity: 0.8, flexShrink: 0 }} />
-            <span style={{ color: goalColor, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', lineHeight: 1 }}>
-              {goalDiff === 0
-                ? '✓'
-                : goalDiff! > 0
-                  ? `+${fmtCompact(goalDiff!, goalFormat)} · +${goalPct!.toFixed(1)}%`
-                  : `−${fmtCompact(Math.abs(goalDiff!), goalFormat)} · −${goalPct!.toFixed(1)}%`
-              }
+            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0 }}>
+              <span style={{ color: '#B0C4D8', fontSize: 9, fontWeight: 500, lineHeight: 1, marginBottom: 1 }}>vs objetivo</span>
+              <span style={{ color: goalColor, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', lineHeight: 1 }}>
+                {goalDiff === 0
+                  ? '✓'
+                  : goalDiff! > 0
+                    ? `+${fmtCompact(goalDiff!, goalFormat)} · +${goalPct!.toFixed(1)}%`
+                    : `−${fmtCompact(Math.abs(goalDiff!), goalFormat)} · −${goalPct!.toFixed(1)}%`
+                }
+              </span>
             </span>
-          </span>
-        ) : showPeriodToggle ? (
-          <span style={{ color: '#B0C4D8', fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, lineHeight: 1 }}>
-            — sin objetivo
           </span>
         ) : null}
       </div>
