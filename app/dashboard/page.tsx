@@ -22,14 +22,6 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface KpisResumen {
-  periodo: string
-  ventas_totales: number
-  margen_bruto_pct: number
-  costo_operativo: number
-  ticket_promedio: number
-}
-
 interface VentaRow {
   fecha: string
   producto: string
@@ -55,11 +47,6 @@ function formatCurrency(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value)
-}
-
-function calcDelta(current: number, previous: number): number {
-  if (previous === 0) return 0
-  return ((current - previous) / previous) * 100
 }
 
 const MONTH_LABELS: Record<string, string> = {
@@ -98,7 +85,6 @@ function EmptyFiltered() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [kpisRows, setKpisRows] = useState<KpisResumen[]>([])
   const [ventasRows, setVentasRows] = useState<VentaRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useDateFilters()
@@ -121,22 +107,15 @@ export default function DashboardPage() {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { setLoading(false); return }
-      Promise.all([
-        supabase
-          .from('kpis_resumen')
-          .select('periodo, ventas_totales, margen_bruto_pct, costo_operativo, ticket_promedio')
-          .eq('user_id', user.id)
-          .order('periodo', { ascending: false }),
-        supabase
+      supabase
           .from('ventas')
           .select('fecha, producto, categoria, unidades, precio_unitario, costo_unitario')
           .eq('user_id', user.id)
-          .order('fecha', { ascending: true }),
-      ]).then(([{ data: kpis }, { data: ventas }]) => {
-        setKpisRows(kpis ?? [])
-        setVentasRows(ventas ?? [])
-        setLoading(false)
-      })
+          .order('fecha', { ascending: true })
+          .then(({ data: ventas }) => {
+            setVentasRows(ventas ?? [])
+            setLoading(false)
+          })
     })
   }, [])
 
@@ -154,26 +133,23 @@ export default function DashboardPage() {
     })
   }, [ventasRows, filters])
 
-  // Filter kpis_resumen by periodo (YYYY-MM)
-  const filteredKpis = useMemo(() => {
-    if (!filters.year) return kpisRows
-    return kpisRows.filter((k) => {
-      const y = parseInt(k.periodo.substring(0, 4))
-      const m = parseInt(k.periodo.substring(5, 7))
-      if (filters.year && y !== filters.year) return false
-      if (filters.month && m !== filters.month) return false
-      return true
-    })
-  }, [kpisRows, filters])
-
   // Compute derived data
   const derived = useMemo(() => {
-    const currentKpis = filteredKpis[0] ?? null
-    const previousKpis = filteredKpis[1] ?? null
+    // ── KPI totals computed from filtered ventas (single source of truth) ──
+    let totalIngresos = 0, totalCostos = 0, txCount = 0
+    for (const r of filteredVentas) {
+      totalIngresos += (r.unidades ?? 0) * (r.precio_unitario ?? 0)
+      totalCostos   += (r.unidades ?? 0) * (r.costo_unitario ?? 0)
+      txCount++
+    }
+    const margenPct      = totalIngresos > 0 ? ((totalIngresos - totalCostos) / totalIngresos) * 100 : 0
+    const ticketPromedio = txCount > 0 ? totalIngresos / txCount : 0
 
-    const latestPeriod = currentKpis?.periodo
+    const sortedFilteredMonths = [...new Set(filteredVentas.map(r => r.fecha.substring(0, 7)))].sort()
+    const latestMonthKey = sortedFilteredMonths.at(-1) ?? ''
+    const latestPeriod = latestMonthKey
       ? (() => {
-          const [year, month] = currentKpis.periodo.split('-')
+          const [year, month] = latestMonthKey.split('-')
           return `${MONTH_NAMES[parseInt(month, 10)]} ${year}`
         })()
       : 'Período actual'
@@ -290,16 +266,15 @@ export default function DashboardPage() {
     const dvVentasDelta = dvPrevV      > 0 ? ((dvCurV       - dvPrevV)      / dvPrevV)      * 100 : 0
     const dvMargenDelta = dvPrevV      > 0 ? dvCurMargen  - dvPrevMargen                          : 0
     const dvTicketDelta = dvPrevTicket > 0 ? ((dvCurTicket  - dvPrevTicket) / dvPrevTicket) * 100 : 0
-    const dvCostoDelta  = currentKpis && previousKpis
-      ? calcDelta(currentKpis.costo_operativo, previousKpis.costo_operativo)
-      : dvPrevC > 0 ? ((dvCurC - dvPrevC) / dvPrevC) * 100 : 0
+    const dvCostoDelta  = dvPrevC > 0 ? ((dvCurC - dvPrevC) / dvPrevC) * 100 : 0
 
     return {
-      currentKpis, previousKpis, latestPeriod, topProducts, categoryData,
+      latestPeriod, topProducts, categoryData,
+      totalIngresos, totalCostos, margenPct, ticketPromedio,
       dvVentasDelta, dvMargenDelta, dvTicketDelta, dvCostoDelta, dvDeltaLabel,
       dvHasCompData: dvPrevV > 0,
     }
-  }, [filteredVentas, filteredKpis, ventasRows, filters.year, filters.month])
+  }, [filteredVentas, ventasRows, filters.year, filters.month])
 
   const periodDeltas = useMemo(() => computeAllPeriodDeltas(ventasRows), [ventasRows])
 
@@ -333,7 +308,7 @@ export default function DashboardPage() {
     )
   }
 
-  const hasData = kpisRows.length > 0 || ventasRows.length > 0
+  const hasData = ventasRows.length > 0
 
   if (!hasData) {
     return (
@@ -362,7 +337,8 @@ export default function DashboardPage() {
   }
 
   const {
-    currentKpis, latestPeriod, topProducts, categoryData,
+    latestPeriod, topProducts, categoryData,
+    totalIngresos, totalCostos, margenPct, ticketPromedio,
     dvVentasDelta, dvMargenDelta, dvTicketDelta, dvCostoDelta, dvDeltaLabel,
     dvHasCompData,
   } = derived
@@ -377,61 +353,61 @@ export default function DashboardPage() {
   const kpis = [
     {
       label: 'Ventas Totales',
-      value: formatCurrency(currentKpis?.ventas_totales ?? 0),
+      value: formatCurrency(totalIngresos),
       delta: dvVentasDelta,
       deltaLabel: dvDeltaLabel,
-      progress: 74,
+      progress: kpiGoals['ventas-totales'] > 0 ? Math.min(Math.round((totalIngresos / kpiGoals['ventas-totales']) * 100), 100) : 0,
       variant: 'default' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ventasDelta, month: periodDeltas.month.ventasDelta, year: periodDeltas.year.ventasDelta },
       goalValue: kpiGoals['ventas-totales'],
-      currentValue: currentKpis?.ventas_totales ?? 0,
+      currentValue: totalIngresos,
       goalFormat: 'currency' as const,
       noComparison: !dvHasCompData,
     },
     {
       label: 'Margen Bruto',
-      value: `${currentKpis?.margen_bruto_pct ?? 0}%`,
+      value: `${margenPct.toFixed(1)}%`,
       delta: dvMargenDelta,
       deltaLabel: dvDeltaLabel,
-      progress: Math.min(currentKpis?.margen_bruto_pct ?? 0, 100),
+      progress: Math.min(Math.round(margenPct), 100),
       variant: 'teal' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.margenDelta, month: periodDeltas.month.margenDelta, year: periodDeltas.year.margenDelta },
       goalValue: kpiGoals['margen-bruto-pct'],
-      currentValue: currentKpis?.margen_bruto_pct ?? 0,
+      currentValue: margenPct,
       goalFormat: 'percent' as const,
       noComparison: !dvHasCompData,
     },
     {
       label: 'Costo Operativo',
-      value: formatCurrency(currentKpis?.costo_operativo ?? 0),
+      value: formatCurrency(totalCostos),
       delta: dvCostoDelta,
       deltaLabel: dvDeltaLabel,
-      progress: currentKpis && currentKpis.ventas_totales > 0 ? Math.round((currentKpis.costo_operativo / currentKpis.ventas_totales) * 100) : 0,
+      progress: totalIngresos > 0 ? Math.round((totalCostos / totalIngresos) * 100) : 0,
       variant: 'amber' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.costosDelta, month: periodDeltas.month.costosDelta, year: periodDeltas.year.costosDelta },
       goalValue: kpiGoals['costos-totales'],
-      currentValue: currentKpis?.costo_operativo ?? 0,
+      currentValue: totalCostos,
       goalFormat: 'currency' as const,
       noComparison: !dvHasCompData,
     },
     {
       label: 'Ticket Promedio',
-      value: formatCurrency(currentKpis?.ticket_promedio ?? 0),
+      value: formatCurrency(ticketPromedio),
       delta: dvTicketDelta,
       deltaLabel: dvDeltaLabel,
-      progress: 56,
+      progress: kpiGoals['ticket-promedio'] > 0 ? Math.min(Math.round((ticketPromedio / kpiGoals['ticket-promedio']) * 100), 100) : 0,
       variant: 'default' as const,
       periodLabel,
       showPeriodToggle: true,
       deltaByPeriod: { week: periodDeltas.week.ticketDelta, month: periodDeltas.month.ticketDelta, year: periodDeltas.year.ticketDelta },
       goalValue: kpiGoals['ticket-promedio'],
-      currentValue: currentKpis?.ticket_promedio ?? 0,
+      currentValue: ticketPromedio,
       goalFormat: 'currency' as const,
       noComparison: !dvHasCompData,
     },
