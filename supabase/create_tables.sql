@@ -96,3 +96,14 @@ CREATE POLICY "kpis_resumen_owner" ON public.kpis_resumen
   WITH CHECK (user_id = auth.uid());
 
 CREATE INDEX IF NOT EXISTS kpis_user_periodo ON public.kpis_resumen (user_id, periodo DESC);
+
+
+-- ─── Grants explícitos para Data API (PostgREST / supabase-js) ───────────────
+-- Requerido desde mayo 2026 (proyectos nuevos) y octubre 2026 (proyectos existentes)
+-- para que tablas en el schema public sean accesibles via Data API.
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.ventas        TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.inventario    TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.clientes      TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.kpis_resumen  TO authenticated;
