@@ -117,6 +117,7 @@ El proyecto está en producción en https://synkrise-app.vercel.app/. Vercel des
 Para animaciones → ver `.claude/skills/animations.md`
 Para UI/diseño → ver `.claude/skills/design.md`
 Para Excel/IA → ver `.claude/skills/data-ai.md`
+Para decisiones difíciles/consejo multi-perspectiva (LLM Council) → ver `.claude/skills/llm-council.md`
 ## Gestión de Errores
 
 Cada vez que encuentres un error durante el desarrollo:
